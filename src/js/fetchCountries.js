@@ -1,13 +1,11 @@
-import { Notify } from 'notiflix';
-
 export function fetchCountries(name) {
   return fetch(
     `https://restcountries.com/v3.1/name/${name}?fields=name,capital,population,flags,languages`,
-  ).then(response => {
-    if (!response.ok) {
-      throw new Error(Notify.failure('Oops, there is no country with that name'));
+  ).then(r => {
+    if (!r.ok) {
+      throw new Error();
     }
 
-    return response.json();
+    return r.json();
   });
 }

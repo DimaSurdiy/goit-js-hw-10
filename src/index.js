@@ -6,58 +6,58 @@ import countryCardTpl from './templates/countryCard.hbs';
 var debounce = require('lodash.debounce');
 
 const refs = {
-  input: document.querySelector('#search-box'),
+  searchInput: document.querySelector('#search-box'),
   countryList: document.querySelector('.country-list'),
-  countryInfoContainer: document.querySelector('.country-info'),
+  countryInfo: document.querySelector('.country-info'),
 };
-const DEBOUNCE_DELAY = 300;
 
-refs.input.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
+refs.searchInput.addEventListener('input', debounce(onSearch, 300));
 
-function onInput(event) {
-  const countryName = event.target.value.trim();
+function onSearch(e) {
+  const searchQuery = e.target.value.trim();
 
-  if (countryName === '') {
+  if (searchQuery === '') {
     clearCountryList();
-    clearCountryInfoContainer();
+    clearCountryInfo();
     return;
   }
 
-  fetchCountries(countryName).then(data => {
-    const numberOfCountries = data.length;
+  fetchCountries(searchQuery)
+    .then(data => {
+      if (data.length > 10) {
+        Notify.info('Too many matches found. Please enter a more specific name.');
+        return;
+      }
 
-    if (numberOfCountries > 10) {
-      Notify.info('Too many matches found. Please enter a more specific name.');
+      if (data.length >= 2 && data.length <= 10) {
+        renderCountryList(data);
+        clearCountryInfo();
+      }
+
+      if (data.length === 1) {
+        renderCountryInfo(data);
+        clearCountryList();
+      }
+    })
+    .catch(error => {
+      Notify.failure('Oops, there is no country with that name');
+      clearCountryInfo();
       clearCountryList();
-      clearCountryInfoContainer();
-    }
-
-    if (numberOfCountries >= 2 && numberOfCountries <= 10) {
-      clearCountryInfoContainer();
-      renderCountryList(data);
-    }
-
-    if (numberOfCountries === 1) {
-      clearCountryList();
-      renderCountryInfoContainer(data);
-    }
-  });
+    });
 }
 
 function renderCountryList(countries) {
-  clearCountryList();
   refs.countryList.innerHTML = countriesTpl(countries);
 }
 
-function renderCountryInfoContainer(countries) {
-  clearCountryInfoContainer();
-  refs.countryInfoContainer.innerHTML = countryCardTpl(countries);
+function renderCountryInfo(country) {
+  refs.countryInfo.innerHTML = countryCardTpl(country);
 }
 
 function clearCountryList() {
   refs.countryList.innerHTML = '';
 }
 
-function clearCountryInfoContainer() {
-  refs.countryInfoContainer.innerHTML = '';
+function clearCountryInfo() {
+  refs.countryInfo.innerHTML = '';
 }
